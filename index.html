@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hotel Reservation System</title>
+<style>
+  body {
+    background-color: #ADD8E6;
+    font-family: Arial, sans-serif;
+  }
+  .container {
+    max-width: 800px;
+    margin: 50px auto;
+    background-color: #DCDCDC;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  .popup {
+  display: none;
+  }
+  
+  .error-popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  .error-popup h2 {
+    margin-top: 0;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Hotel Reservation System</h1>
+    <h2>Guest Information</h2>
+    <form id="reservationForm">
+       <label for="firstName">First Name:</label>
+      <input type="text" id="firstName" required><br><br>
+      <label for="lastName">Last Name:</label>
+      <input type="text" id="lastName" required><br><br>
+      <label for="address">Address:</label>
+      <input type="text" id="address" required><br><br>
+      <label for="checkInDate">Check In Date:</label>
+      <input type="date" id="checkInDate" required><br><br>
+      <label for="checkOutDate">Check Out Date:</label>
+      <input type="date" id="checkOutDate" required><br><br>
+      <label for="numGuests">Number of Guests:</label>
+      <input type="number" id="numGuests" required><br><br>
+      <label for="membershipID">Membership ID:</label>
+      <input type="text" id="membershipID"><br><br>
+
+      <h2>Identification Information</h2>
+      <label for="idType">ID Type:</label>
+      <select id="idType" required>
+        <option value="" disabled selected>Please select</option>
+        <option value="DriversLicense">Driver's License</option>
+        <option value="StateID">State ID</option>
+        <option value="Passport">Passport</option>
+      </select><br><br>
+      <label for="idNumber">ID Number:</label>
+      <input type="text" id="idNumber" required><br><br>
+
+
+      <h2>Rate Information</h2>
+      <label for="roomType">Room Type:</label>
+      <select id="roomType" required onchange="calculateRate()">
+        <option value="" disabled selected>Please select</option>
+        <option value="Single">Single</option>
+        <option value="Double">Double</option>
+        <option value="Suite">Suite</option>
+      </select><br><br>
+      <label for="numAdults">Number of Adults:</label>
+      <input type="number" id="numAdults" required><br><br>
+
+      <label for="numChildren">Number of Children:</label>
+      <input type="number" id="numChildren" required><br><br>
+
+      <label for="currency">Currency:</label>
+      <select id="currency" required onchange="checkCurrency()">
+        <option value="USD">USD</option>
+        <option value="INR">INR</option>
+        <option value="EUR">EUR</option>
+        <option value="YEN">YEN</option>
+      </select><br><br>
+
+ <label for="rate">Rate:</label>
+<input type="number" id="rate" readonly onblur="checkRateChanges()"><br><br>
+
+      <button type="button" onclick="editRate()">Edit Rate</button><br><br>
+
+      <input type="submit" value="Submit">
+    </form>
+  </div>
+  
+
+<div class="error-popup" id="errorPopup">
+  <h2>ERROR</h2>
+  <p id="errorText"></p>
+  <label for="changedPrice">Changed Price:</label>
+  <input type="number" id="changedPrice"><br><br>
+  <label for="reason">Reason:</label>
+  <select id="errorReason">
+    <option value="HolidaySpecialEvent">Holiday / Special Event</option>
+    <option value="LastMinuteLastAvailable">Last Minute / Last Available</option>
+    <option value="Other">Other</option>
+  </select><br><br>
+  <input type="text" id="otherReason" style="display:none;" placeholder="Enter reason here"><br><br>
+  <button onclick="acceptChanges()">Accept Changes</button>
+</div>
+  
+<div class="popup" id="acceptPopup">
+  <h2>Rate Accepted</h2>
+  <p>New Rate: <span id="newRateDisplay"></span></p>
+  <label for="acceptedReason">Reason:</label>
+  <span id="acceptedReason"></span><br><br>
+  <button onclick="submitChanges()">Submit Changes</button>
+</div>
+
+  <script>
+    function calculateRate() {
+      var roomType = document.getElementById('roomType').value;
+      var numAdults = parseInt(document.getElementById('numAdults').value);
+      var numChildren = parseInt(document.getElementById('numChildren').value);
+
+      var totalGuestsEntered = numAdults + numChildren;
+
+      if (totalGuestsEntered !== parseInt(document.getElementById('numGuests').value)) {
+        alert('Error: Total number of guests entered should be equal to the sum of adults and children.');
+        return;
+      }
+
+      var rate = 0;
+      if (roomType === 'Single') {
+        rate = 100;
+      } else if (roomType === 'Double') {
+        rate = 150;
+      } else if (roomType === 'Suite') {
+        rate = 200;
+      }
+
+      // Adjust rate based on number of guests
+      rate *= (numAdults + 0.5 * numChildren);
+
+      // Display rate in USD
+      document.getElementById('rate').value = rate.toFixed(2);
+    }
+
+   
+  function editRate() {
+    var errorPopup = document.getElementById('errorPopup');
+    errorPopup.style.display = 'none';
+
+    document.getElementById('rate').removeAttribute('readonly');
+    document.getElementById('rate').focus();
+  }
+
+  function checkCurrency() {
+    var currency = document.getElementById('currency').value;
+    if (currency !== 'USD') {
+      alert('Wrong currency entered. Please change it.');
+      document.getElementById('currency').value = 'USD';
+    }
+  }
+
+  function acceptChanges() {
+    var newRate = document.getElementById('changedPrice').value;
+    var reason = document.getElementById('errorReason').value;
+
+    if (reason === 'Other') {
+      reason = document.getElementById('otherReason').value;
+    }
+
+    document.getElementById('rate').value = newRate;
+
+    var errorPopup = document.getElementById('errorPopup');
+    errorPopup.style.display = 'none';
+
+    var acceptPopup = document.getElementById('acceptPopup');
+    acceptPopup.style.display = 'block';
+    document.getElementById('newRateDisplay').textContent = newRate;
+    document.getElementById('acceptedReason').textContent = reason;
+  }
+
+  // Modify the checkRateChanges function to reset the reason field
+  function checkRateChanges() {
+    var rate = document.getElementById('rate').value;
+    if (rate !== '') {
+      document.getElementById('errorText').innerHTML = 'The rate has been changed. Please give a valid reason.';
+      document.getElementById('errorPopup').style.display = 'block';
+      document.getElementById('acceptedReason').textContent = ''; // Reset reason field
+    }
+  }
+
+  // Modify the submitChanges function to include reason
+  function submitChanges() {
+    var reason = document.getElementById('acceptedReason').textContent;
+    var newRate = document.getElementById('newRateDisplay').textContent;
+
+    alert('Changes submitted. New Rate: ' + newRate + ', Reason: ' + reason);
+  }
+
+  // Add an event listener to handle changes in the error reason select element
+  document.getElementById('errorReason').addEventListener('change', function() {
+    var otherReasonInput = document.getElementById('otherReason');
+    if (this.value === 'Other') {
+      otherReasonInput.style.display = 'block';
+    } else {
+      otherReasonInput.style.display = 'none';
+    }
+  });
+
+</body>
+</html>
